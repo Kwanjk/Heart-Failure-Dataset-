@@ -28,7 +28,7 @@ This project analyzes clinical and demographic data to identify key risk factors
 - `HeartDisease` (Target: `1` = Disease, `0` = Normal)
 
 ## 🛠️ Technologies Used
-- **Language:** R (v4.x)
+- **Language:** R (v4.4.2)
 - **IDE:** RStudio
 - **Key libraries:**
   - `ggplot2` (visualization)
