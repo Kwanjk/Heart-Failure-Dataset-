@@ -1,0 +1,240 @@
+---
+title: "INST447 - Team Project Midpoint Report"
+author: "Joseph Choi, Josue Aguilar, Joshua Kwan, Justin Monius"
+date: "2025-11-23"
+Dataset: "https://www.kaggle.com/datasets/tan5577/heart-failure-dataset"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(ggplot2)
+library(dplyr)
+library(skimr)
+```
+
+# 1. Data Import and Clean-Up
+
+```{r import}
+# Load dataset
+heart <- read.csv("/Users/jkwan/Documents/INST447/heart.csv")
+
+# Convert categorical variables to factors
+heart$Sex <- as.factor(heart$Sex)
+heart$ChestPainType <- as.factor(heart$ChestPainType)
+heart$FastingBS <- as.factor(heart$FastingBS)
+heart$RestingECG <- as.factor(heart$RestingECG)
+heart$ExerciseAngina <- as.factor(heart$ExerciseAngina)
+heart$ST_Slope <- as.factor(heart$ST_Slope)
+heart$HeartDisease <- as.factor(heart$HeartDisease)
+
+# ----------- DATA CLEANING BASED ON REAL VALUES ----------
+
+# 1. RestingBP contains impossible value 0 → treat as missing
+heart$RestingBP[heart$RestingBP == 0] <- NA
+
+# 2. Cholesterol contains impossible value 0 → treat as missing
+heart$Cholesterol[heart$Cholesterol == 0] <- NA
+
+# 3. Oldpeak is already valid (no negative values in this dataset)
+#    No cleaning required for Oldpeak.
+
+# Summary of missing values after cleaning
+na_table <- data.frame(
+  Variable = names(heart),
+  Missing = colSums(is.na(heart))
+)
+
+na_table
+```
+
+**Cleaning Notes:**  
+- RestingBP and Cholesterol contained impossible zero values → replaced with NA.  
+- Oldpeak contained no invalid values; left unchanged.  
+- Factor conversion ensures proper statistical and visualization behavior in R.  
+- Missing-value warnings in plots occur because ggplot removes NA rows automatically—this is expected.
+
+---
+
+# 2. Exploratory Data Analysis
+
+## 2.1 Summary Statistics
+
+```{r summary}
+summary(heart)
+```
+
+## 2.2 Skim Summary (Enhanced Profiling)
+
+```{r skim}
+skim(heart)
+```
+
+## 2.3 Correlation Among Numeric Variables  
+(Using cleaned data)
+
+```{r correlation}
+numeric_vars <- heart[, c("Age", "RestingBP", "Cholesterol", "MaxHR", "Oldpeak")]
+cor(numeric_vars, use = "pairwise.complete.obs")
+```
+
+---
+
+# 3. Related Variables and Descriptions
+
+| Variable | Description |
+|---------|-------------|
+| Age | Patient age (years) |
+| Sex | Male/Female |
+| RestingBP | Resting blood pressure (mmHg) |
+| Cholesterol | Serum cholesterol (mg/dL) |
+| FastingBS | Fasting blood sugar (>120 mg/dL = 1) |
+| ExerciseAngina | Exercise-induced angina (Y/N) |
+| MaxHR | Maximum heart rate achieved |
+| Oldpeak | ST depression during exercise |
+| ST_Slope | Shape of the ST-segment slope |
+| ChestPainType | Type of chest pain (TA, ATA, ASY, NAP) |
+| HeartDisease | 1 = disease present, 0 = none |
+
+---
+
+# 4. Potential Relationships
+
+We suspect the following:
+
+- **Age** ↑ → **Higher heart disease risk**  
+- **RestingBP** ↑ → **Higher heart disease risk** (modest effect)  
+- **Cholesterol** ↑ → Slightly higher risk (weak effect)  
+- **MaxHR** ↑ → **Lower heart disease risk**  
+- **ExerciseAngina = Yes** → Strong predictor of heart disease  
+- **ST_Slope = Flat** → Strongly associated with disease  
+- **ChestPainType = ASY** → Often present among heart disease patients  
+- **Sex = Male** → Higher heart disease incidence  
+
+---
+
+# 5. Descriptive Statistics & Visualizations
+
+---
+
+## 5.1 Age Distribution by Heart Disease
+
+```{r agePlot}
+ggplot(heart, aes(x = Age, fill = HeartDisease)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  labs(title = "Age Distribution by Heart Disease Status",
+       x = "Age", y = "Count")
+```
+
+**Interpretation:**  
+Heart disease is most common between **ages 45–65**, consistent with known cardiac risk profiles.
+
+---
+
+## 5.2 Resting Blood Pressure by Heart Disease
+
+```{r bpPlot}
+ggplot(heart, aes(x = HeartDisease, y = RestingBP, fill = HeartDisease)) +
+  geom_boxplot() +
+  labs(title = "Resting BP vs Heart Disease",
+       x = "Heart Disease", y = "Resting BP (mmHg)")
+```
+
+**Interpretation:**  
+RestingBP is **slightly higher** in the heart disease group, though the effect is modest.  
+Zero values removed during cleaning produce some NA-related row removals in the plot.
+
+---
+
+## 5.3 Cholesterol Levels by Heart Disease
+
+```{r cholPlot}
+ggplot(heart, aes(x = HeartDisease, y = Cholesterol, fill = HeartDisease)) +
+  geom_boxplot() +
+  labs(title = "Cholesterol vs Heart Disease",
+       x = "Heart Disease", y = "Cholesterol (mg/dL)")
+```
+
+**Interpretation:**  
+Cholesterol is **slightly higher** in heart disease patients, but correlation is **weak**, matching the correlation matrix.
+
+---
+
+## 5.4 Exercise Angina by Heart Disease
+
+```{r anginaPlot}
+ggplot(heart, aes(x = ExerciseAngina, fill = HeartDisease)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Exercise Angina by Heart Disease",
+       x = "Exercise Angina", y = "Count")
+```
+
+**Interpretation:**  
+Exercise-induced angina is **much more frequent** in individuals with heart disease, making it a strong indicator.
+
+---
+
+## 5.5 ST Slope by Heart Disease
+
+```{r slopePlot}
+ggplot(heart, aes(x = ST_Slope, fill = HeartDisease)) +
+  geom_bar(position = "dodge") +
+  labs(title = "ST Slope by Heart Disease",
+       x = "ST Slope Category", y = "Count")
+```
+
+**Interpretation:**  
+A **Flat ST slope** is strongly associated with heart disease, consistent with findings from stress-test analysis.
+
+---
+
+## 5.6 Chest Pain Type by Heart Disease
+
+```{r chestpain}
+ggplot(heart, aes(x = ChestPainType, fill = HeartDisease)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Chest Pain Type vs Heart Disease",
+       x = "Chest Pain Type", y = "Count")
+```
+
+**Interpretation:**  
+The **ASY (asymptomatic)** chest pain type is much more common among heart disease patients.
+
+---
+
+## 5.7 Max Heart Rate vs Age (Scatterplot)
+
+```{r scatter}
+ggplot(heart, aes(x = Age, y = MaxHR, color = HeartDisease)) +
+  geom_point(alpha = 0.6) +
+  labs(title = "Max Heart Rate vs Age by Heart Disease",
+       x = "Age", y = "Max Heart Rate")
+```
+
+**Interpretation:**  
+MaxHR decreases with age, and heart disease patients generally achieve **lower MaxHR**.
+
+---
+
+# 6. Export Cleaned Dataset (Required for Deliverable)
+
+```{r export}
+write.csv(heart, "/Users/jkwan/Documents/INST447/heart_cleaned.csv", row.names = FALSE)
+```
+
+This file must be included with submission.
+
+
+
+---
+
+# Final Interpretation Summary
+
+- Heart disease peaks in ages **45–65**.  
+- RestingBP shows **slightly higher** levels in heart disease patients.  
+- Cholesterol differences exist but are **weakly associated** with disease.  
+- Exercise-induced angina and Flat ST slope are **strong indicators** of heart disease.  
+- ASY chest pain type appears most frequently in the heart disease group.  
+- MaxHR decreases with age and tends to be lower in those with heart disease.  
+
+These findings set up clear hypotheses for significance testing and regression in Deliverable #3.
+
