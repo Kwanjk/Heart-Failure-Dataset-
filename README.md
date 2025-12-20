@@ -13,6 +13,7 @@
 This project analyzes clinical and demographic data to identify key risk factors associated with heart disease. Using the Heart Failure Prediction Dataset, our team performed data cleaning, exploratory data analysis, significance testing (t-tests, chi-square), and built a logistic regression model to identify predictors of heart disease and inform potential screening strategies.
 
 ## 📂 Repository Structure
+- [**Team Project Report (Deliverable 3)**](https://docs.google.com/document/d/1Hfvrvvig_bbn6d-PCNxew0ZkcoJZrEbzsrQs87n6Zmw/edit?usp=sharing) — Full formal data analytics report and interpretation.
 - `heart_cleaned.csv` — the processed dataset used for analysis (zeros in `RestingBP` and `Cholesterol` treated as NA).
 - `Heart_Failure_Analysis.Rmd` (or `.R`) — R source containing data import, cleaning, visualizations, and statistical models.
 - `Project_Report.pdf` — final formal data analytics report (Deliverable 3).
